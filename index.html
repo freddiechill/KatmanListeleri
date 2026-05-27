@@ -62,6 +62,7 @@
             -webkit-user-drag: none; /* Tarayıcının kendi sürüklemesini engelle */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s;
+            flex-shrink: 0; /* CRITICAL: Resimlerin boyutunun sıkışmasını tamamen engeller */
         }
         
         @media (max-width: 640px) {
@@ -85,9 +86,10 @@
 
     <!-- Üst Kontrol Çubuğu -->
     <header class="max-w-5xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <h1 class="text-3xl font-black tracking-wide text-white">Tier List Oluşturucu</h1>
+        <!-- Düzenlenebilir Başlık -->
+        <h1 id="main-title" contenteditable="true" spellcheck="false" class="text-3xl sm:text-4xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
         
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap justify-center">
             <!-- Dosya Yükleme -->
             <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -113,7 +115,8 @@
     <main class="max-w-5xl mx-auto w-full flex-1 flex flex-col gap-8">
         
         <!-- İndirilecek Ana Tablo Kapsayıcısı -->
-        <div id="export-container" class="bg-[#1a1d24] rounded-2xl p-2 sm:p-4 shadow-2xl border border-gray-800">
+        <div id="export-container" class="bg-[#1a1d24] rounded-2xl p-4 sm:p-6 shadow-2xl border border-gray-800 flex flex-col gap-6">
+            
             <!-- Tier Listesi -->
             <div id="tierList" class="flex flex-col rounded-xl overflow-hidden border border-gray-800 shadow-inner">
                 <!-- JavaScript ile Doldurulacak -->
@@ -122,7 +125,6 @@
 
         <!-- Fotoğraf Havuzu -->
         <div class="mt-4">
-            <h2 class="text-gray-400 text-sm uppercase tracking-widest font-bold mb-3 px-2">Fotoğraf Havuzu</h2>
             <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-4 drop-zone-content flex flex-wrap gap-3 items-start justify-start shadow-inner min-h-[120px]">
                 <!-- Yüklenen resimler buraya gelecek -->
             </div>
@@ -167,11 +169,11 @@
         // --- UYGULAMA DURUMU (STATE) ---
         let state = {
             tiers: [
-                { id: 't1', name: 'S', color: '#ff4545' },
-                { id: 't2', name: 'A', color: '#ff9838' },
-                { id: 't3', name: 'B', color: '#ffdf45' },
-                { id: 't4', name: 'C', color: '#63d471' },
-                { id: 't5', name: 'D', color: '#45b6ff' }
+                { id: 't1', name: 'S', color: '#ff6b81' },
+                { id: 't2', name: 'A', color: '#ff9f43' },
+                { id: 't3', name: 'B', color: '#feca57' },
+                { id: 't4', name: 'C', color: '#1dd1a1' },
+                { id: 't5', name: 'D', color: '#48dbfb' }
             ],
             images: [] // { id: 'img1', src: '...', tierId: 't1' | 'pool' }
         };
@@ -195,7 +197,7 @@
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
-                    <div class="w-24 sm:w-32 flex-shrink-0 flex items-center justify-center font-black text-2xl sm:text-3xl tier-label" 
+                    <div class="w-24 sm:w-32 flex-shrink-0 flex items-center justify-center font-black text-2xl sm:text-3xl tier-label text-center px-2 break-all" 
                          style="background-color: ${tier.color}; border-right: 2px solid #0f1115;">
                         ${tier.name}
                     </div>
@@ -442,26 +444,70 @@
         }
 
         function createTierEditRow(tier) {
+            const mediumColors = ['#ff6b81', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#5f27cd', '#ff9ff3', '#c8d6e5', '#a4b0be'];
             const div = document.createElement('div');
             div.className = 'flex items-center gap-3 mb-3 bg-[#13151a] p-2 rounded-xl border border-gray-800 tier-edit-row';
             div.setAttribute('data-id', tier.id || ('new_' + Date.now()));
             
             div.innerHTML = `
-                <div class="relative w-12 h-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg border border-gray-600 shadow-inner">
-                    <input type="color" class="absolute -top-2 -left-2 w-16 h-16 cursor-pointer color-input" value="${tier.color}">
+                <div class="flex flex-col gap-1 items-center justify-center pr-3 border-r border-gray-700">
+                    <button onclick="moveTierUp(this)" class="text-gray-500 hover:text-white p-1 hover:bg-gray-700 rounded transition-colors" title="Yukarı Taşı">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    </button>
+                    <button onclick="moveTierDown(this)" class="text-gray-500 hover:text-white p-1 hover:bg-gray-700 rounded transition-colors" title="Aşağı Taşı">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
                 </div>
-                <input type="text" class="flex-1 bg-transparent border-none text-white font-bold text-lg focus:outline-none focus:ring-0 name-input px-2" value="${tier.name}" placeholder="Katman Adı">
-                <button onclick="this.parentElement.remove()" class="p-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                </button>
+                
+                <div class="flex-1 flex flex-col gap-3 pl-2 py-1">
+                    <div class="flex items-center gap-3">
+                        <div class="flex flex-col gap-1 items-center" title="Tüm Renk Paletini Aç (Açıklık ve Doygunluk Ayarı)">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase">Özel Seçim</span>
+                            <div class="relative w-10 h-10 flex-shrink-0 cursor-pointer overflow-hidden rounded border border-gray-600 shadow-inner hover:border-gray-400 transition-colors">
+                                <input type="color" class="absolute -top-2 -left-2 w-14 h-14 cursor-pointer color-input" value="${tier.color}">
+                            </div>
+                        </div>
+                        
+                        <input type="text" class="flex-1 bg-transparent border-none text-white font-bold text-lg focus:outline-none focus:ring-0 name-input px-2 placeholder-gray-600" value="${tier.name}" placeholder="Katman Adı">
+                        
+                        <button onclick="this.closest('.tier-edit-row').remove()" class="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors" title="Sil">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 items-center px-1 mt-1">
+                        <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider mr-1">Hazır Renkler:</span>
+                        ${mediumColors.map(c => `<button type="button" class="w-6 h-6 rounded-full hover:scale-125 transition-transform shadow-md border border-gray-700" style="background-color: ${c}" onclick="setSwatchColor(this, '${c}')" title="${c}"></button>`).join('')}
+                    </div>
+                </div>
             `;
             return div;
         }
 
+        function setSwatchColor(btn, color) {
+            const row = btn.closest('.tier-edit-row');
+            const colorInput = row.querySelector('.color-input');
+            colorInput.value = color;
+        }
+
+        function moveTierUp(btn) {
+            const row = btn.closest('.tier-edit-row');
+            if (row.previousElementSibling) {
+                row.parentNode.insertBefore(row, row.previousElementSibling);
+            }
+        }
+
+        function moveTierDown(btn) {
+            const row = btn.closest('.tier-edit-row');
+            if (row.nextElementSibling) {
+                row.parentNode.insertBefore(row.nextElementSibling, row);
+            }
+        }
+
         function addTierRow() {
             const listEl = document.getElementById('modalTierList');
-            const defaultColors = ['#ff4545', '#ff9838', '#ffdf45', '#63d471', '#45b6ff', '#a855f7', '#ec4899'];
-            const randomColor = defaultColors[Math.floor(Math.random() * defaultColors.length)];
+            const mediumColors = ['#ff6b81', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#5f27cd', '#ff9ff3', '#c8d6e5', '#a4b0be'];
+            const randomColor = mediumColors[Math.floor(Math.random() * mediumColors.length)];
             
             listEl.appendChild(createTierEditRow({ name: 'Yeni', color: randomColor }));
             
@@ -492,17 +538,36 @@
 
         // --- PNG OLARAK İNDİRME ---
         async function exportPNG() {
+            // İndirme anında ekrandaki imleç/seçim görünmesin diye odaklanmayı kaldırıyoruz
+            if (document.activeElement) {
+                document.activeElement.blur();
+            }
+
             const container = document.getElementById('export-container');
+            const titleEl = document.getElementById('main-title');
             const originalBorder = container.style.border;
+            const originalWidth = container.style.width;
+            
+            // Başlığı resme dahil etmek için geçici olarak container içine kopyalıyoruz
+            const clonedTitle = titleEl.cloneNode(true);
+            clonedTitle.className = "text-3xl sm:text-4xl font-black tracking-wide text-white text-center mb-6 w-full break-words";
+            clonedTitle.removeAttribute('contenteditable');
+            container.insertBefore(clonedTitle, container.firstChild);
             
             container.style.border = 'none';
+            
+            // Çözüm: İndirmeden hemen önce piksel genişliğini dondurarak yerleşimin sıkışmasını/bozulmasını önleriz
+            const rect = container.getBoundingClientRect();
+            container.style.width = rect.width + 'px';
 
             try {
                 const canvas = await html2canvas(container, {
                     backgroundColor: '#0f1115', 
                     scale: 2, 
                     useCORS: true,
-                    logging: false
+                    logging: false,
+                    width: rect.width, // Canvas genişliğini de senkronize et
+                    windowWidth: document.documentElement.offsetWidth
                 });
 
                 const image = canvas.toDataURL('image/png');
@@ -514,7 +579,10 @@
                 console.error("PNG dışa aktarma hatası:", err);
                 alert("Resim indirilirken bir sorun oluştu.");
             } finally {
+                // Temizlik
+                clonedTitle.remove(); // Geçici başlığı sil
                 container.style.border = originalBorder;
+                container.style.width = originalWidth;
             }
         }
 
