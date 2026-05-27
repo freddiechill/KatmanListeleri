@@ -8,8 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Satoshi Font -->
     <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap" rel="stylesheet">
-    <!-- html2canvas for PNG Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Sayfanın Birebir Ekran Görüntüsünü Almak İçin Yeni Kütüphane -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     
     <style>
         body {
@@ -57,6 +57,7 @@
             height: 80px !important;
             min-width: 80px !important;
             min-height: 80px !important;
+            object-fit: cover;
             border-radius: 0.75rem; /* Yuvarlak köşeler */
             cursor: grab;
             user-select: none;
@@ -64,9 +65,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
             transition: transform 0.1s;
             flex-shrink: 0; /* CRITICAL: Resimlerin boyutunun sıkışmasını tamamen engeller */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             background-color: #1e222a; /* Resim yüklenirken arka plan */
         }
         
@@ -204,11 +202,9 @@
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
-                    <div class="w-24 sm:w-32 flex-shrink-0 relative" 
+                    <div class="w-24 sm:w-32 flex-shrink-0 flex items-center justify-center p-2" 
                          style="background-color: ${tier.color}; border-right: 2px solid #0f1115;">
-                        <div class="absolute inset-0 flex items-center justify-center p-2">
-                            <span class="font-black text-2xl sm:text-3xl tier-label text-center break-words">${tier.name}</span>
-                        </div>
+                        <span class="font-black text-2xl sm:text-3xl tier-label text-center break-words">${tier.name}</span>
                     </div>
                     <div class="flex-1 p-3 flex flex-wrap gap-3 items-start content-start drop-zone-content"></div>
                 `;
@@ -217,8 +213,8 @@
 
             // Resimleri Yerleştir
             state.images.forEach(imgData => {
-                const imgEl = document.createElement('div'); // img yerine div kullanıyoruz (html2canvas orantı koruması için)
-                imgEl.style.backgroundImage = `url('${imgData.src}')`;
+                const imgEl = document.createElement('img'); // Resim kalitesi için img formatına geri dönüldü
+                imgEl.src = imgData.src;
                 imgEl.className = 'draggable-item';
                 imgEl.setAttribute('data-img-id', imgData.id);
                 
@@ -564,25 +560,24 @@
             
             container.style.border = 'none';
             
-            // Çözüm: İndirmeden hemen önce piksel genişliğini dondurarak yerleşimin sıkışmasını/bozulmasını önleriz
+            // Yerleşimin bozulmaması için piksel cinsinden genişliği donduruyoruz
             const rect = container.getBoundingClientRect();
             container.style.width = rect.width + 'px';
-            container.style.maxWidth = rect.width + 'px'; // Ekstra güvenlik için
+            container.style.maxWidth = rect.width + 'px';
 
             try {
-                const canvas = await html2canvas(container, {
+                // Sayfanın birebir ekran görüntüsünü alan, kalite dostu yeni motor
+                const dataUrl = await htmlToImage.toPng(container, {
                     backgroundColor: '#0f1115', 
-                    scale: 2, 
-                    useCORS: true,
-                    logging: false,
-                    width: rect.width, // Canvas genişliğini de senkronize et
-                    windowWidth: window.innerWidth // Export edilen ekranın çözünürlüğünü kilitle
+                    pixelRatio: 2, // 2x Yüksek kalite fotoğraf
+                    style: {
+                        margin: '0',
+                    }
                 });
 
-                const image = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
                 link.download = 'tier-listesi.png';
-                link.href = image;
+                link.href = dataUrl;
                 link.click();
             } catch (err) {
                 console.error("PNG dışa aktarma hatası:", err);
