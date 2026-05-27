@@ -204,9 +204,9 @@
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
-                    <div class="w-24 sm:w-32 flex-shrink-0 flex flex-col items-center justify-center p-2 border-r-[2px] border-[#0f1115]" 
-                         style="background-color: ${tier.color};">
-                        <span class="font-black text-2xl sm:text-3xl tier-label text-center break-words leading-none" style="line-height: 1; display: block;">${tier.name}</span>
+                    <div class="w-24 sm:w-32 flex-shrink-0 p-2" 
+                         style="background-color: ${tier.color}; border-right: 2px solid #0f1115; display: flex; align-items: center; justify-content: center;">
+                        <span class="font-black text-2xl sm:text-3xl tier-label text-center break-words" style="margin: auto; display: inline-block;">${tier.name}</span>
                     </div>
                     <div class="flex-1 p-3 flex flex-wrap gap-3 items-start content-start drop-zone-content"></div>
                 `;
