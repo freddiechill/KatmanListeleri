@@ -147,31 +147,30 @@
     <!-- Üst Kontrol Çubuğu -->
     <header class="max-w-4xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
         <!-- Düzenlenebilir Başlık -->
-        <h1 id="main-title" contenteditable="true" spellcheck="false" class="text-2xl sm:text-3xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
+        <h1 id="main-title" contenteditable="true" spellcheck="false" class="w-full sm:flex-1 min-w-0 break-words text-2xl sm:text-3xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
         
-        <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center text-sm sm:text-base">
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center text-xs sm:text-sm flex-shrink-0">
+            <!-- Metin Ekle Butonu (En Solda, Sadece İkon, Kare) -->
+            <button onclick="openTextModal()" class="bg-purple-600 hover:bg-purple-500 transition-colors w-8 h-8 sm:w-[34px] sm:h-[34px] rounded-lg flex items-center justify-center shadow-lg flex-shrink-0" title="Metin Ekle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+            </button>
+
             <!-- Dosya Yükleme -->
-            <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-semibold shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Resim Yükle
                 <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
             </label>
 
-            <!-- Metin Ekle Butonu -->
-            <button onclick="openTextModal()" class="bg-purple-600 hover:bg-purple-500 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-                Metin Ekle
-            </button>
-
             <!-- Listeyi Düzenle Butonu -->
-            <button onclick="openModal()" class="bg-gray-700 hover:bg-gray-600 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            <button onclick="openModal()" class="bg-gray-700 hover:bg-gray-600 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-semibold shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                 Düzenle
             </button>
 
             <!-- PNG İndir -->
-            <button onclick="exportPNG()" class="bg-green-600 hover:bg-green-500 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <button onclick="exportPNG()" class="bg-green-600 hover:bg-green-500 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-semibold shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 İndir
             </button>
         </div>
@@ -323,9 +322,9 @@
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
-                    <div class="w-20 sm:w-24 flex-shrink-0 flex items-center justify-center p-2" 
+                    <div class="w-20 sm:w-24 flex-shrink-0 flex items-center justify-center p-1 sm:p-2 tier-label-container overflow-hidden" 
                          style="background-color: ${tier.color}; border-right: 2px solid #0f1115;">
-                        <span class="font-black text-xl sm:text-2xl tier-label text-center break-words">${tier.name}</span>
+                        <span class="font-black tier-label text-center break-words leading-tight inline-block" style="font-size: 24px;">${tier.name}</span>
                     </div>
                     <div class="flex-1 p-2 flex flex-wrap gap-2 items-start content-start drop-zone-content"></div>
                 `;
@@ -372,7 +371,41 @@
                     }
                 }
             });
+
+            // Resimler ve katmanlar çizildikten sonra yazı boyutlarını otomatik ayarla
+            adjustTierLabelSizes();
         }
+
+        // --- YAZI BOYUTUNU OTOMATİK KÜÇÜLTME MANTIĞI ---
+        function adjustTierLabelSizes() {
+            const containers = document.querySelectorAll('.tier-label-container');
+            containers.forEach(container => {
+                const span = container.querySelector('.tier-label');
+                
+                // Önce yazıyı varsayılan en büyük boyuta (24px) çekiyoruz
+                span.style.fontSize = '24px';
+                
+                let fontSize = 24;
+                const minFontSize = 10; // Okunabilecek minimum piksel boyutu
+                
+                // Kutunun güvenli iç boşluğunu (padding) hesaplıyoruz
+                const paddingX = parseInt(window.getComputedStyle(container).paddingLeft) + parseInt(window.getComputedStyle(container).paddingRight);
+                const paddingY = parseInt(window.getComputedStyle(container).paddingTop) + parseInt(window.getComputedStyle(container).paddingBottom);
+                
+                const maxWidth = container.clientWidth - paddingX;
+                const maxHeight = container.clientHeight - paddingY;
+
+                // Eğer yazı kutunun genişliğini veya yüksekliğini aşıyorsa, sığana kadar 1 piksel küçültüyoruz
+                while ((span.offsetWidth > maxWidth || span.offsetHeight > maxHeight) && fontSize > minFontSize) {
+                    fontSize--;
+                    span.style.fontSize = fontSize + 'px';
+                }
+            });
+        }
+
+        // Ekran boyutu değiştiğinde de otomatik ayarı tetikle
+        window.addEventListener('resize', adjustTierLabelSizes);
+
 
         // --- SÜRÜKLE VE BIRAK MANTIĞI ---
         let dragState = null;
