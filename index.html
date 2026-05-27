@@ -53,8 +53,10 @@
 
         /* Yüklenen resimlerin 1:1 formatı ve yuvarlaklığı */
         .draggable-item {
-            width: 80px;
-            height: 80px;
+            width: 80px !important;
+            height: 80px !important;
+            min-width: 80px !important;
+            min-height: 80px !important;
             object-fit: cover;
             border-radius: 0.75rem; /* Yuvarlak köşeler */
             cursor: grab;
@@ -67,8 +69,10 @@
         
         @media (max-width: 640px) {
             .draggable-item {
-                width: 64px;
-                height: 64px;
+                width: 64px !important;
+                height: 64px !important;
+                min-width: 64px !important;
+                min-height: 64px !important;
             }
         }
 
@@ -197,9 +201,9 @@
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
-                    <div class="w-24 sm:w-32 flex-shrink-0 flex items-center justify-center font-black text-2xl sm:text-3xl tier-label text-center px-2 break-all" 
-                         style="background-color: ${tier.color}; border-right: 2px solid #0f1115;">
-                        ${tier.name}
+                    <div class="w-24 sm:w-32 flex-shrink-0 flex font-black text-2xl sm:text-3xl tier-label px-2" 
+                         style="background-color: ${tier.color}; border-right: 2px solid #0f1115; align-items: center; justify-content: center;">
+                        <span class="text-center" style="margin: auto; word-break: break-word;">${tier.name}</span>
                     </div>
                     <div class="flex-1 p-3 flex flex-wrap gap-3 items-start content-start drop-zone-content"></div>
                 `;
@@ -444,7 +448,7 @@
         }
 
         function createTierEditRow(tier) {
-            const mediumColors = ['#ff6b81', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#5f27cd', '#ff9ff3', '#c8d6e5', '#a4b0be'];
+            const mediumColors = ['#ff6b81', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#5f27cd', '#ff9ff3', '#c8d6e5'];
             const div = document.createElement('div');
             div.className = 'flex items-center gap-3 mb-3 bg-[#13151a] p-2 rounded-xl border border-gray-800 tier-edit-row';
             div.setAttribute('data-id', tier.id || ('new_' + Date.now()));
@@ -462,7 +466,6 @@
                 <div class="flex-1 flex flex-col gap-3 pl-2 py-1">
                     <div class="flex items-center gap-3">
                         <div class="flex flex-col gap-1 items-center" title="Tüm Renk Paletini Aç (Açıklık ve Doygunluk Ayarı)">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase">Özel Seçim</span>
                             <div class="relative w-10 h-10 flex-shrink-0 cursor-pointer overflow-hidden rounded border border-gray-600 shadow-inner hover:border-gray-400 transition-colors">
                                 <input type="color" class="absolute -top-2 -left-2 w-14 h-14 cursor-pointer color-input" value="${tier.color}">
                             </div>
@@ -506,7 +509,7 @@
 
         function addTierRow() {
             const listEl = document.getElementById('modalTierList');
-            const mediumColors = ['#ff6b81', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#5f27cd', '#ff9ff3', '#c8d6e5', '#a4b0be'];
+            const mediumColors = ['#ff6b81', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#5f27cd', '#ff9ff3', '#c8d6e5'];
             const randomColor = mediumColors[Math.floor(Math.random() * mediumColors.length)];
             
             listEl.appendChild(createTierEditRow({ name: 'Yeni', color: randomColor }));
@@ -559,6 +562,7 @@
             // Çözüm: İndirmeden hemen önce piksel genişliğini dondurarak yerleşimin sıkışmasını/bozulmasını önleriz
             const rect = container.getBoundingClientRect();
             container.style.width = rect.width + 'px';
+            container.style.maxWidth = rect.width + 'px'; // Ekstra güvenlik için
 
             try {
                 const canvas = await html2canvas(container, {
@@ -567,7 +571,7 @@
                     useCORS: true,
                     logging: false,
                     width: rect.width, // Canvas genişliğini de senkronize et
-                    windowWidth: document.documentElement.offsetWidth
+                    windowWidth: window.innerWidth // Export edilen ekranın çözünürlüğünü kilitle
                 });
 
                 const image = canvas.toDataURL('image/png');
@@ -583,6 +587,7 @@
                 clonedTitle.remove(); // Geçici başlığı sil
                 container.style.border = originalBorder;
                 container.style.width = originalWidth;
+                container.style.maxWidth = ''; // Max-width'i temizle
             }
         }
 
