@@ -92,7 +92,7 @@
 <body class="min-h-screen p-4 sm:p-8 flex flex-col">
 
     <!-- Üst Kontrol Çubuğu -->
-    <header class="max-w-6xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+    <header class="max-w-4xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
         <!-- Düzenlenebilir Başlık -->
         <h1 id="main-title" contenteditable="true" spellcheck="false" class="text-2xl sm:text-3xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
         
@@ -119,10 +119,10 @@
     </header>
 
     <!-- Ana İçerik Alanı -->
-    <main class="max-w-6xl mx-auto w-full flex-1 flex flex-col gap-6">
+    <main class="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-6">
         
         <!-- İndirilecek Ana Tablo Kapsayıcısı -->
-        <div id="export-container" class="bg-[#1a1d24] rounded-2xl p-3 sm:p-5 shadow-2xl border border-gray-800 flex flex-col gap-4">
+        <div id="export-container" style="font-family: 'Satoshi', sans-serif;" class="bg-[#1a1d24] rounded-2xl p-3 sm:p-5 shadow-2xl border border-gray-800 flex flex-col gap-4">
             
             <!-- Tier Listesi -->
             <div id="tierList" class="flex flex-col rounded-xl overflow-hidden border border-gray-800 shadow-inner">
@@ -343,9 +343,15 @@
                         const nextId = nextSibling.getAttribute('data-img-id');
                         const insertIndex = state.images.findIndex(img => img.id === nextId);
                         state.images.splice(insertIndex, 0, imgData);
+
+                        // DOM'u (Ekranı) anında güncelle (Kasmayı önler)
+                        dropContent.insertBefore(dragState.element, nextSibling);
                     } else {
                         // Önünde resim yoksa (en sona bırakıldıysa) sonuna ekle
                         state.images.push(imgData);
+
+                        // DOM'u (Ekranı) anında güncelle (Kasmayı önler)
+                        dropContent.appendChild(dragState.element);
                     }
                 }
 
@@ -364,8 +370,7 @@
 
             dragState = null;
             
-            // Sıralanmış yeni array'e göre ekranı tamamen yenile
-            renderAll();
+            // Ekranı baştan çizme fonksiyonu kaldırıldı çünkü kasmaya sebep oluyordu, üstte anlık dom manipülasyonu yapıldı.
         }
 
         // --- PARTİKÜL ANİMASYONU ---
@@ -549,7 +554,11 @@
                 document.activeElement.blur();
             }
 
+            // Sistemin fontları tamamen yüklediğinden (render ettiğinden) emin oluyoruz
+            await document.fonts.ready;
+
             const container = document.getElementById('export-container');
+            const titleEl = document.getElementById('main-title');
             const originalBorder = container.style.border;
             const originalWidth = container.style.width;
             
@@ -567,6 +576,7 @@
                     pixelRatio: 2, // 2x Yüksek kalite fotoğraf
                     style: {
                         margin: '0',
+                        fontFamily: '"Satoshi", sans-serif' // Kütüphaneye fontu zorla
                     }
                 });
 
