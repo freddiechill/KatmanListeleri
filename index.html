@@ -554,11 +554,10 @@
                 document.activeElement.blur();
             }
 
-            // Sistemin fontları tamamen yüklediğinden (render ettiğinden) emin oluyoruz
+            // Sistemin fontları tamamen yüklediğinden emin oluyoruz
             await document.fonts.ready;
 
             const container = document.getElementById('export-container');
-            const titleEl = document.getElementById('main-title');
             const originalBorder = container.style.border;
             const originalWidth = container.style.width;
             
@@ -569,14 +568,24 @@
             container.style.width = rect.width + 'px';
             container.style.maxWidth = rect.width + 'px';
 
+            // FONT ÇÖZÜMÜ: html-to-image kütüphanesinin fontu görebilmesi için CSS'i içine gömüyoruz
+            let styleEl = document.createElement('style');
             try {
-                // Sayfanın birebir ekran görüntüsünü alan, kalite dostu yeni motor
+                // Satoshi font kodlarını anlık olarak çekip resim çerçevesinin içine dahil ediyoruz
+                const fontCss = await fetch('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap').then(res => res.text());
+                styleEl.innerHTML = fontCss;
+                container.appendChild(styleEl);
+            } catch(e) {
+                console.warn("Font CSS yüklenemedi:", e);
+            }
+
+            try {
+                // Sayfanın birebir ekran görüntüsünü alan motor
                 const dataUrl = await htmlToImage.toPng(container, {
                     backgroundColor: '#0f1115', 
                     pixelRatio: 2, // 2x Yüksek kalite fotoğraf
                     style: {
-                        margin: '0',
-                        fontFamily: '"Satoshi", sans-serif' // Kütüphaneye fontu zorla
+                        margin: '0'
                     }
                 });
 
@@ -588,7 +597,8 @@
                 console.error("PNG dışa aktarma hatası:", err);
                 alert("Resim indirilirken bir sorun oluştu.");
             } finally {
-                // Temizlik
+                // Temizlik (Eklediğimiz görünmez font dosyasını geri siliyoruz)
+                if (styleEl.parentNode) styleEl.remove();
                 container.style.border = originalBorder;
                 container.style.width = originalWidth;
                 container.style.maxWidth = ''; // Max-width'i temizle
