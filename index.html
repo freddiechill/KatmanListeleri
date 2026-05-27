@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Katman Listesi Oluşturucu</title>
+    <!-- Sayfa İkonu (Favicon) -->
+    <link rel="icon" type="image/png" href="https://github.com/freddiechill/gorsel-depom/blob/main/20260527_202327_0000.png?raw=true">
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Satoshi Font -->
@@ -53,12 +55,12 @@
 
         /* Yüklenen resimlerin 1:1 formatı ve yuvarlaklığı */
         .draggable-item {
-            width: 80px !important;
-            height: 80px !important;
-            min-width: 80px !important;
-            min-height: 80px !important;
+            width: 64px !important;
+            height: 64px !important;
+            min-width: 64px !important;
+            min-height: 64px !important;
             object-fit: cover;
-            border-radius: 0.75rem; /* Yuvarlak köşeler */
+            border-radius: 0.5rem; /* Biraz daha küçük kavis */
             cursor: grab;
             user-select: none;
             -webkit-user-drag: none; /* Tarayıcının kendi sürüklemesini engelle */
@@ -70,10 +72,10 @@
         
         @media (max-width: 640px) {
             .draggable-item {
-                width: 64px !important;
-                height: 64px !important;
-                min-width: 64px !important;
-                min-height: 64px !important;
+                width: 48px !important;
+                height: 48px !important;
+                min-width: 48px !important;
+                min-height: 48px !important;
             }
         }
 
@@ -83,33 +85,33 @@
 
         /* Havuz ve Tier bölümleri için min yükseklik */
         .drop-zone-content {
-            min-height: 96px;
+            min-height: 72px;
         }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-8 flex flex-col">
 
     <!-- Üst Kontrol Çubuğu -->
-    <header class="max-w-5xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+    <header class="max-w-6xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
         <!-- Düzenlenebilir Başlık -->
-        <h1 id="main-title" contenteditable="true" spellcheck="false" class="text-3xl sm:text-4xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
+        <h1 id="main-title" contenteditable="true" spellcheck="false" class="text-2xl sm:text-3xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
         
-        <div class="flex items-center gap-3 flex-wrap justify-center">
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center text-sm sm:text-base">
             <!-- Dosya Yükleme -->
-            <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
+            <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Resim Yükle
                 <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
             </label>
 
             <!-- Listeyi Düzenle Butonu -->
-            <button onclick="openModal()" class="bg-gray-700 hover:bg-gray-600 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
+            <button onclick="openModal()" class="bg-gray-700 hover:bg-gray-600 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                 Düzenle
             </button>
 
             <!-- PNG İndir -->
-            <button onclick="exportPNG()" class="bg-green-600 hover:bg-green-500 transition-colors px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
+            <button onclick="exportPNG()" class="bg-green-600 hover:bg-green-500 transition-colors px-3 sm:px-4 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 İndir
             </button>
@@ -117,10 +119,10 @@
     </header>
 
     <!-- Ana İçerik Alanı -->
-    <main class="max-w-5xl mx-auto w-full flex-1 flex flex-col gap-8">
+    <main class="max-w-6xl mx-auto w-full flex-1 flex flex-col gap-6">
         
         <!-- İndirilecek Ana Tablo Kapsayıcısı -->
-        <div id="export-container" class="bg-[#1a1d24] rounded-2xl p-4 sm:p-6 shadow-2xl border border-gray-800 flex flex-col gap-6">
+        <div id="export-container" class="bg-[#1a1d24] rounded-2xl p-3 sm:p-5 shadow-2xl border border-gray-800 flex flex-col gap-4">
             
             <!-- Tier Listesi -->
             <div id="tierList" class="flex flex-col rounded-xl overflow-hidden border border-gray-800 shadow-inner">
@@ -129,8 +131,8 @@
         </div>
 
         <!-- Fotoğraf Havuzu -->
-        <div class="mt-4">
-            <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-4 drop-zone-content flex flex-wrap gap-3 items-start justify-start shadow-inner min-h-[120px]">
+        <div class="mt-2">
+            <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-3 drop-zone-content flex flex-wrap gap-2 items-start justify-start shadow-inner min-h-[90px]">
                 <!-- Yüklenen resimler buraya gelecek -->
             </div>
         </div>
@@ -198,15 +200,15 @@
                 const borderClass = isLast ? '' : 'border-b border-[#0f1115]';
 
                 const row = document.createElement('div');
-                row.className = `flex min-h-[96px] bg-[#1e222a] ${borderClass} group`;
+                row.className = `flex min-h-[72px] bg-[#1e222a] ${borderClass} group`;
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
-                    <div class="w-24 sm:w-32 flex-shrink-0 flex items-center justify-center p-2" 
+                    <div class="w-20 sm:w-24 flex-shrink-0 flex items-center justify-center p-2" 
                          style="background-color: ${tier.color}; border-right: 2px solid #0f1115;">
-                        <span class="font-black text-2xl sm:text-3xl tier-label text-center break-words">${tier.name}</span>
+                        <span class="font-black text-xl sm:text-2xl tier-label text-center break-words">${tier.name}</span>
                     </div>
-                    <div class="flex-1 p-3 flex flex-wrap gap-3 items-start content-start drop-zone-content"></div>
+                    <div class="flex-1 p-2 flex flex-wrap gap-2 items-start content-start drop-zone-content"></div>
                 `;
                 tierListEl.appendChild(row);
             });
@@ -548,15 +550,8 @@
             }
 
             const container = document.getElementById('export-container');
-            const titleEl = document.getElementById('main-title');
             const originalBorder = container.style.border;
             const originalWidth = container.style.width;
-            
-            // Başlığı resme dahil etmek için geçici olarak container içine kopyalıyoruz
-            const clonedTitle = titleEl.cloneNode(true);
-            clonedTitle.className = "text-3xl sm:text-4xl font-black tracking-wide text-white text-center mb-6 w-full break-words";
-            clonedTitle.removeAttribute('contenteditable');
-            container.insertBefore(clonedTitle, container.firstChild);
             
             container.style.border = 'none';
             
@@ -584,7 +579,6 @@
                 alert("Resim indirilirken bir sorun oluştu.");
             } finally {
                 // Temizlik
-                clonedTitle.remove(); // Geçici başlığı sil
                 container.style.border = originalBorder;
                 container.style.width = originalWidth;
                 container.style.maxWidth = ''; // Max-width'i temizle
