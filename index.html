@@ -9,15 +9,17 @@
     <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- UI Hızlı Yükleme İçin Normal Font Linki -->
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap" rel="stylesheet">
+    <!-- UI Hızlı Yükleme İçin Rubik Font Linki -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- KESİN FONT ÇÖZÜMÜ: Tarayıcı güvenliğini aşmak için Font dosyalarını (binary) indirip Base64 formatında DOM'a kalıcı gömüyoruz -->
     <script>
         async function embedFontsForCanvas() {
             try {
-                // 1. Satoshi CSS dosyasını çekiyoruz
-                const response = await fetch('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap');
+                // 1. Rubik CSS dosyasını çekiyoruz
+                const response = await fetch('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
                 let cssText = await response.text();
                 
                 // 2. CSS içindeki font indirme URL'lerini buluyoruz
@@ -61,8 +63,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     
     <style>
+        /* UYGULAMA HİSSİYATI (Mavi seçim alanını kaldırma) */
+        * {
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standard */
+            -webkit-user-drag: none; /* Görsellerin ve linklerin sürüklenmesini engeller */
+        }
+
+        /* Sadece veri girilen alanlarda (inputlar ve başlık) metin seçimine izin ver */
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
         body {
-            font-family: 'Satoshi', sans-serif;
+            font-family: 'Rubik', sans-serif;
             background-color: #0f1115; /* Koyu tema arka planı */
             color: #ffffff;
             overflow-x: hidden;
@@ -144,65 +163,70 @@
 </head>
 <body class="min-h-screen p-4 sm:p-8 flex flex-col">
 
-    <!-- Üst Kontrol Çubuğu -->
-    <header class="max-w-4xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <!-- Düzenlenebilir Başlık -->
-        <h1 id="main-title" contenteditable="true" spellcheck="false" class="w-full sm:flex-1 min-w-0 break-words text-2xl sm:text-3xl font-black tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
-        
-        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center text-xs sm:text-sm flex-shrink-0">
-            <!-- Metin Ekle Butonu (En Solda, Sadece İkon, Kare) -->
-            <button onclick="openTextModal()" class="bg-purple-600 hover:bg-purple-500 transition-colors w-8 h-8 sm:w-[34px] sm:h-[34px] rounded-lg flex items-center justify-center shadow-lg flex-shrink-0" title="Metin Ekle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-            </button>
+    <!-- Ana Kapsayıcı: İçeriği ekranın tam ortasına (dikey ve yatay simetrik) oturtmak için eklendi -->
+    <div class="w-full max-w-4xl mx-auto my-auto flex flex-col">
 
-            <!-- Dosya Yükleme -->
-            <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Resim Yükle
-                <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
-            </label>
-
-            <!-- Listeyi Düzenle Butonu -->
-            <button onclick="openModal()" class="bg-gray-700 hover:bg-gray-600 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                Düzenle
-            </button>
-
-            <!-- PNG İndir -->
-            <button onclick="exportPNG()" class="bg-green-600 hover:bg-green-500 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-semibold shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                İndir
-            </button>
-        </div>
-    </header>
-
-    <!-- Ana İçerik Alanı -->
-    <main class="max-w-4xl mx-auto w-full flex-1 flex flex-col gap-6">
-        
-        <!-- İndirilecek Ana Tablo Kapsayıcısı -->
-        <div id="export-container" style="font-family: 'Satoshi', sans-serif;" class="bg-[#1a1d24] rounded-2xl p-3 sm:p-5 shadow-2xl border border-gray-800 flex flex-col gap-4">
+        <!-- Üst Kontrol Çubuğu -->
+        <header class="w-full flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <!-- Düzenlenebilir Başlık -->
+            <h1 id="main-title" contenteditable="true" spellcheck="false" class="w-full sm:flex-1 min-w-0 break-words text-2xl sm:text-3xl font-semibold tracking-wide text-white focus:outline-none hover:bg-[#1e222a] focus:bg-[#1e222a] px-4 py-2 rounded-xl transition-all border-2 border-dashed border-transparent focus:border-gray-600" title="Listeyi adlandırmak için tıklayın">Benim Katman Listem</h1>
             
-            <!-- Tier Listesi -->
-            <div id="tierList" class="flex flex-col rounded-xl overflow-hidden border border-gray-800 shadow-inner">
-                <!-- JavaScript ile Doldurulacak -->
-            </div>
-        </div>
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center text-xs sm:text-sm flex-shrink-0">
+                <!-- Metin Ekle Butonu (En Solda, Sadece İkon, Kare) -->
+                <button onclick="openTextModal()" class="bg-purple-600 hover:bg-purple-500 transition-colors w-8 h-8 sm:w-[34px] sm:h-[34px] rounded-lg flex items-center justify-center shadow-lg flex-shrink-0" title="Metin Ekle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+                </button>
 
-        <!-- Fotoğraf Havuzu -->
-        <div class="mt-2">
-            <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-3 drop-zone-content flex flex-wrap gap-2 items-start justify-start shadow-inner min-h-[90px]">
-                <!-- Yüklenen resimler buraya gelecek -->
-            </div>
-        </div>
+                <!-- Dosya Yükleme -->
+                <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-medium shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Resim Yükle
+                    <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
+                </label>
 
-    </main>
+                <!-- Listeyi Düzenle Butonu -->
+                <button onclick="openModal()" class="bg-gray-700 hover:bg-gray-600 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-medium shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    Düzenle
+                </button>
+
+                <!-- PNG İndir -->
+                <button onclick="exportPNG()" class="bg-green-600 hover:bg-green-500 transition-colors px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 font-medium shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    İndir
+                </button>
+            </div>
+        </header>
+
+        <!-- Ana İçerik Alanı -->
+        <main class="w-full flex flex-col gap-6">
+            
+            <!-- İndirilecek Ana Tablo Kapsayıcısı -->
+            <div id="export-container" style="font-family: 'Rubik', sans-serif;" class="bg-[#1a1d24] rounded-2xl p-3 sm:p-5 shadow-2xl border border-gray-800 flex flex-col gap-4">
+                
+                <!-- Tier Listesi -->
+                <div id="tierList" class="flex flex-col rounded-xl overflow-hidden border border-gray-800 shadow-inner">
+                    <!-- JavaScript ile Doldurulacak -->
+                </div>
+            </div>
+
+            <!-- Fotoğraf Havuzu -->
+            <div class="mt-2">
+                <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-3 drop-zone-content flex flex-wrap gap-2 items-start justify-start shadow-inner min-h-[90px]">
+                    <!-- Yüklenen resimler buraya gelecek -->
+                </div>
+            </div>
+
+        </main>
+
+    </div> <!-- Ana Kapsayıcı Bitişi -->
 
     <!-- Ayarlar Modalı -->
     <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-200">
         <div class="bg-[#1a1d24] border border-gray-700 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="modalContent">
             
             <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-[#1e222a]">
-                <h2 class="text-xl font-bold flex items-center gap-2">
+                <h2 class="text-xl font-semibold flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                     Katmanları Düzenle
                 </h2>
@@ -216,14 +240,14 @@
             </div>
 
             <div class="p-6 border-t border-gray-800 bg-[#1e222a] flex justify-between items-center">
-                <button onclick="addTierRow()" class="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 transition-colors px-3 py-2 rounded-lg hover:bg-blue-500/10">
+                <button onclick="addTierRow()" class="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors px-3 py-2 rounded-lg hover:bg-blue-500/10">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Katman Ekle
                 </button>
                 
                 <div class="flex gap-3">
-                    <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">İptal</button>
-                    <button onclick="saveSettings()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-lg shadow-blue-900/50 transition-all active:scale-95">Kaydet</button>
+                    <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">İptal</button>
+                    <button onclick="saveSettings()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-900/50 transition-all active:scale-95">Kaydet</button>
                 </div>
             </div>
 
@@ -235,7 +259,7 @@
         <div class="bg-[#1a1d24] border border-gray-700 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="textModalContent">
             
             <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-[#1e222a]">
-                <h2 class="text-lg font-bold flex items-center gap-2">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-400"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
                     1:1 Yazı Ekle
                 </h2>
@@ -247,19 +271,19 @@
             <div class="p-6 flex flex-col gap-6 items-center">
                 <!-- Önizleme Kutusu (1:1 Oran) -->
                 <div id="textPreviewBox" class="w-32 h-32 flex-shrink-0 rounded-xl flex items-center justify-center overflow-hidden p-2" style="background-color: #2563eb;">
-                    <span id="textPreviewSpan" class="font-black text-white text-center leading-tight break-words" style="font-size: 32px; font-family: 'Satoshi', sans-serif;">Yazı</span>
+                    <span id="textPreviewSpan" class="font-bold text-white text-center leading-tight break-words" style="font-size: 32px; font-family: 'Rubik', sans-serif;">Yazı</span>
                 </div>
                 
                 <div class="w-full flex flex-col gap-4">
                     <input type="text" id="customTextInput" placeholder="Kutuya yazılacak metin..." class="w-full bg-[#13151a] border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-colors">
                     
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-xs text-gray-400 font-bold uppercase tracking-wider">Yazı Boyutu</label>
+                        <label class="text-xs text-gray-400 font-medium uppercase tracking-wider">Yazı Boyutu</label>
                         <input type="range" id="customTextSize" min="12" max="64" value="32" class="w-full accent-purple-500">
                     </div>
 
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-xs text-gray-400 font-bold uppercase tracking-wider">Arka Plan Rengi</label>
+                        <label class="text-xs text-gray-400 font-medium uppercase tracking-wider">Arka Plan Rengi</label>
                         <div class="relative w-full h-10 overflow-hidden rounded-xl border border-gray-700">
                             <input type="color" id="customTextBg" value="#2563eb" class="absolute -top-2 -left-2 w-[120%] h-[120%] cursor-pointer">
                         </div>
@@ -268,8 +292,8 @@
             </div>
 
             <div class="p-5 border-t border-gray-800 bg-[#1e222a] flex justify-end gap-3">
-                <button onclick="closeTextModal()" class="px-5 py-2.5 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">İptal</button>
-                <button onclick="generateTextImage()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold shadow-lg shadow-purple-900/50 transition-all active:scale-95">Havuza Ekle</button>
+                <button onclick="closeTextModal()" class="px-5 py-2.5 rounded-xl font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">İptal</button>
+                <button onclick="generateTextImage()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-medium shadow-lg shadow-purple-900/50 transition-all active:scale-95">Havuza Ekle</button>
             </div>
         </div>
     </div>
@@ -324,7 +348,7 @@
                 row.innerHTML = `
                     <div class="w-20 sm:w-24 flex-shrink-0 flex items-center justify-center p-1 sm:p-2 tier-label-container overflow-hidden" 
                          style="background-color: ${tier.color}; border-right: 2px solid #0f1115;">
-                        <span class="font-black tier-label text-center break-words leading-tight inline-block" style="font-size: 24px;">${tier.name}</span>
+                        <span class="font-bold tier-label text-center break-words leading-tight inline-block" style="font-size: 24px;">${tier.name}</span>
                     </div>
                     <div class="flex-1 p-2 flex flex-wrap gap-2 items-start content-start drop-zone-content"></div>
                 `;
@@ -405,7 +429,6 @@
 
         // Ekran boyutu değiştiğinde de otomatik ayarı tetikle
         window.addEventListener('resize', adjustTierLabelSizes);
-
 
         // --- SÜRÜKLE VE BIRAK MANTIĞI ---
         let dragState = null;
@@ -665,7 +688,7 @@
                             </div>
                         </div>
                         
-                        <input type="text" class="flex-1 bg-transparent border-none text-white font-bold text-lg focus:outline-none focus:ring-0 name-input px-2 placeholder-gray-600" value="${tier.name}" placeholder="Katman Adı">
+                        <input type="text" class="flex-1 bg-transparent border-none text-white font-medium text-lg focus:outline-none focus:ring-0 name-input px-2 placeholder-gray-600" value="${tier.name}" placeholder="Katman Adı">
                         
                         <button onclick="this.closest('.tier-edit-row').remove()" class="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors" title="Sil">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
@@ -673,7 +696,7 @@
                     </div>
                     
                     <div class="flex flex-wrap gap-2 items-center px-1 mt-1">
-                        <span class="text-[11px] text-gray-500 font-bold uppercase tracking-wider mr-1">Hazır Renkler:</span>
+                        <span class="text-[11px] text-gray-500 font-medium uppercase tracking-wider mr-1">Hazır Renkler:</span>
                         ${mediumColors.map(c => `<button type="button" class="w-6 h-6 rounded-full hover:scale-125 transition-transform shadow-md border border-gray-700" style="background-color: ${c}" onclick="setSwatchColor(this, '${c}')" title="${c}"></button>`).join('')}
                     </div>
                 </div>
