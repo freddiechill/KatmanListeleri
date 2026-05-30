@@ -107,14 +107,70 @@
             background-color: #1e222a;
         }
         
+        .drop-zone-content { min-height: 72px; }
+
+        /* SADECE MOBİL CİHAZLAR İÇİN ÖZEL DÜZENLEME (< 640px) */
         @media (max-width: 640px) {
             .draggable-wrapper {
                 width: 48px !important; height: 48px !important;
                 min-width: 48px !important; min-height: 48px !important;
             }
-        }
 
-        .drop-zone-content { min-height: 72px; }
+            /* Mobil havuz dış kapsayıcısını ekranın altına sabitle */
+            .mobile-pool-wrapper {
+                position: fixed !important;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background-color: #0f1115; /* Arka planla uyumlu zemin */
+                padding: 10px 16px 20px 16px !important;
+                z-index: 50;
+                border-top: 1px solid #1f2937; /* Hafif bir üst çizgi */
+                box-shadow: 0 -10px 25px -5px rgba(0,0,0,0.8);
+                margin-top: 0 !important;
+            }
+
+            /* Havuzun üstüne bilgilendirici kaydırma yazısı eklendi */
+            .mobile-pool-wrapper::before {
+                content: "↔ Fotoğrafları görmek için kaydırın ↔";
+                display: block;
+                text-align: center;
+                font-size: 10px;
+                color: #9ca3af;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+            }
+
+            /* Mobil havuz içerik alanı (Yatay kaydırma özelliği verildi) */
+            .mobile-pool-content {
+                flex-wrap: nowrap !important; /* Alt satıra inmek yerine yan yana dizilsinler */
+                overflow-x: auto !important; /* Sağa sola kaydırma barı açılsın */
+                overflow-y: hidden !important;
+                padding-bottom: 12px !important; /* Kaydırma çubuğu için boşluk */
+                justify-content: flex-start !important;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Mobilde Fotoğraf havuzu kaydırma çubuğu özelleştirmesi */
+            .mobile-pool-content::-webkit-scrollbar {
+                height: 8px;
+            }
+            .mobile-pool-content::-webkit-scrollbar-track {
+                background: #1f2937;
+                border-radius: 4px;
+            }
+            .mobile-pool-content::-webkit-scrollbar-thumb {
+                background: #6366f1; /* Havuz barını belirginleştirmek için indigo renk eklendi */
+                border-radius: 4px;
+            }
+
+            /* Sabitlenen havuzun sitenin altını kapatmaması için ek boşluk */
+            body {
+                padding-bottom: 160px !important; 
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 sm:p-8 flex flex-col relative">
@@ -234,9 +290,9 @@
                 </div>
             </div>
 
-            <!-- Fotoğraf Havuzu -->
-            <div class="mt-2">
-                <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-3 drop-zone-content flex flex-wrap gap-2 items-start justify-start shadow-inner min-h-[90px]">
+            <!-- Fotoğraf Havuzu (MOBİLDE SABİTLENECEK KISIM) -->
+            <div class="mt-2 mobile-pool-wrapper">
+                <div id="imagePool" data-tier-id="pool" class="bg-[#1a1d24] border-2 border-dashed border-gray-700 rounded-2xl p-3 drop-zone-content flex flex-wrap gap-2 items-start justify-start shadow-inner min-h-[90px] mobile-pool-content">
                     <!-- Yüklenen resimler buraya gelecek -->
                 </div>
             </div>
@@ -409,12 +465,6 @@
             this.value = ''; // Aynı dosyayı tekrar seçebilmek için inputu sıfırla
         });
 
-        // Resim Silme Fonksiyonu
-        function deleteImage(id) {
-            state.images = state.images.filter(img => img.id !== id);
-            renderAll();
-        }
-
         // Dışarıya tıklanınca çarpı (X) butonlarını gizleme
         document.addEventListener('mousedown', hideContextMenuEvent);
         document.addEventListener('touchstart', hideContextMenuEvent, { passive: true });
@@ -516,7 +566,7 @@
         }
         window.addEventListener('resize', adjustTierLabelSizes);
 
-        // --- SÜRÜKLE VE BIRAK MANTIĞI ---
+        // --- SÜRÜKLE VE BIRAK MANTIĞI (ÖN İZLEMELİ) ---
         let dragState = null;
         let longPressTimer = null; // Mobilde Uzun Basma Algılayıcı
 
@@ -574,6 +624,7 @@
                     const cloneDel = clone.querySelector('.delete-btn');
                     if(cloneDel) cloneDel.remove();
 
+                    // Uçan Klon (Fareyi / Parmağı takip eden görsel)
                     clone.style.position = 'fixed';
                     clone.style.left = `${rect.left}px`;
                     clone.style.top = `${rect.top}px`;
@@ -584,7 +635,7 @@
                     clone.style.margin = '0';
                     clone.style.opacity = '0.9';
                     clone.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)';
-                    clone.style.transform = 'scale(1.05)';
+                    clone.style.transform = 'scale(1.1)';
                     clone.style.transition = 'transform 0.1s ease';
                     
                     document.body.appendChild(clone);
@@ -592,7 +643,11 @@
                     dragState.offsetX = clientX - rect.left;
                     dragState.offsetY = clientY - rect.top;
 
-                    dragState.element.style.opacity = '0';
+                    // Orijinal Görseli Ön İzleme (Ghost) Haline Getir
+                    dragState.element.style.opacity = '0.4';
+                    dragState.element.style.transform = 'scale(0.95)';
+                    dragState.element.style.border = '2px dashed #60a5fa'; // Mavi kesik çizgi
+                    dragState.element.style.borderRadius = '0.5rem';
                     
                     document.querySelectorAll('.delete-btn').forEach(b => b.classList.add('opacity-0', 'pointer-events-none'));
                 }
@@ -600,8 +655,39 @@
 
             if (dragState.isDragging) {
                 e.preventDefault(); 
+                // Klonu fareyle hareket ettir
                 dragState.clone.style.left = `${clientX - dragState.offsetX}px`;
                 dragState.clone.style.top = `${clientY - dragState.offsetY}px`;
+
+                // --- CANLI ÖN İZLEME MANTIĞI ---
+                // Farenin altındaki hedef alanı bul (Klon pointer-events: none olduğu için engellemez)
+                const targetEl = document.elementFromPoint(clientX, clientY);
+                const dropZone = targetEl ? targetEl.closest('[data-tier-id]') : null;
+
+                if (dropZone) {
+                    let dropContent = dropZone.classList.contains('drop-zone-content') ? dropZone : dropZone.querySelector('.drop-zone-content');
+                    if (!dropContent && dropZone.id === 'imagePool') dropContent = dropZone;
+
+                    if (dropContent) {
+                        // Orijinal eleman hariç diğer çocukları al
+                        const siblings = [...dropContent.querySelectorAll('.draggable-wrapper')]
+                                            .filter(el => el !== dragState.element);
+                        
+                        let nextSibling = siblings.find(sibling => {
+                            const box = sibling.getBoundingClientRect();
+                            if (clientY < box.top) return true; // Fare üst satırda
+                            if (clientY > box.bottom) return false; // Fare alt satırda
+                            return clientX < box.left + box.width / 2; // Fare bu elemanın sol yarısında
+                        });
+
+                        // Orijinal (hayalet) elementi DOM'da anlık olarak yeni yerine taşı
+                        if (nextSibling) {
+                            dropContent.insertBefore(dragState.element, nextSibling);
+                        } else {
+                            dropContent.appendChild(dragState.element);
+                        }
+                    }
+                }
             }
         }
 
@@ -610,50 +696,56 @@
             if (!dragState) return;
 
             if (!dragState.isDragging) {
-                // Tıklama bırakıldı, herhangi bir eylem yapma (Menu Context halledecek)
+                // Sadece tıklandıysa (sürüklenmediyse)
             } else {
                 const clientX = e.type.includes('touch') ? e.changedTouches[0].clientX : e.clientX;
                 const clientY = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
 
-                const targetEl = document.elementFromPoint(clientX, clientY);
-                const dropZone = targetEl ? targetEl.closest('[data-tier-id]') : null;
-
-                if (dropZone) {
-                    const newTierId = dropZone.getAttribute('data-tier-id');
-                    let dropContent = dropZone.classList.contains('drop-zone-content') ? dropZone : dropZone.querySelector('.drop-zone-content');
-                    if (!dropContent && dropZone.id === 'imagePool') dropContent = dropZone;
-
-                    const siblings = [...dropContent.querySelectorAll('.draggable-wrapper')]
-                                        .filter(el => el.getAttribute('data-img-id') !== dragState.id);
-                    
-                    let nextSibling = siblings.find(sibling => {
-                        const box = sibling.getBoundingClientRect();
-                        if (clientY < box.top) return true; 
-                        if (clientY > box.bottom) return false; 
-                        return clientX < box.left + box.width / 2;
-                    });
-
-                    const imgIndex = state.images.findIndex(img => img.id === dragState.id);
-                    if (imgIndex > -1) {
-                        const imgData = state.images.splice(imgIndex, 1)[0]; 
-                        imgData.tierId = newTierId; 
-                        
-                        if (nextSibling) {
-                            const nextId = nextSibling.getAttribute('data-img-id');
-                            const insertIndex = state.images.findIndex(img => img.id === nextId);
-                            state.images.splice(insertIndex, 0, imgData);
-                            dropContent.insertBefore(dragState.element, nextSibling);
-                        } else {
-                            state.images.push(imgData);
-                            dropContent.appendChild(dragState.element);
-                        }
+                // --- STATE SENKRONİZASYONU ---
+                // Görsel canlı olarak DOM'da (ekranda) yer değiştirdiği için, bırakıldığında
+                // state verilerimizi HTML üzerindeki son duruma bakarak güncelliyoruz.
+                const newImages = [];
+                
+                // 1. Önce Tier'ları Tara
+                state.tiers.forEach(tier => {
+                    const tierDiv = document.querySelector(`div[data-tier-id="${tier.id}"] .drop-zone-content`);
+                    if (tierDiv) {
+                        tierDiv.querySelectorAll('.draggable-wrapper').forEach(el => {
+                            const id = el.getAttribute('data-img-id');
+                            const imgData = state.images.find(img => img.id === id);
+                            if (imgData) {
+                                imgData.tierId = tier.id;
+                                newImages.push(imgData);
+                            }
+                        });
                     }
-                    spawnParticles(clientX, clientY);
+                });
+
+                // 2. Sonra Havuzu Tara
+                const poolDiv = document.getElementById('imagePool');
+                if (poolDiv) {
+                    poolDiv.querySelectorAll('.draggable-wrapper').forEach(el => {
+                        const id = el.getAttribute('data-img-id');
+                        const imgData = state.images.find(img => img.id === id);
+                        if (imgData) {
+                            imgData.tierId = 'pool';
+                            newImages.push(imgData);
+                        }
+                    });
                 }
+
+                // Listeyi yeni sırasıyla güncelle
+                state.images = newImages;
+                spawnParticles(clientX, clientY);
             }
 
+            // Klonu Sil ve Orijinali Eski Görünümüne Döndür
             if (dragState.clone) dragState.clone.remove();
-            if (dragState.element) dragState.element.style.opacity = '1';
+            if (dragState.element) {
+                dragState.element.style.opacity = '1';
+                dragState.element.style.transform = '';
+                dragState.element.style.border = '';
+            }
             
             document.removeEventListener('mousemove', dragMove);
             document.removeEventListener('touchmove', dragMove);
@@ -661,6 +753,11 @@
             document.removeEventListener('touchend', endDrag);
 
             dragState = null;
+            
+            // Sıralamanın temiz kalması için baştan renderla
+            if (e.type !== 'mousedown' && e.type !== 'touchstart') {
+                renderAll();
+            }
         }
 
         function spawnParticles(x, y) {
