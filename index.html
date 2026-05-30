@@ -107,7 +107,7 @@
             background-color: #1e222a;
         }
         
-        .drop-zone-content { min-height: 72px; }
+        .drop-zone-content { min-height: 80px; } /* 64px Resim + 16px Boşluk (Padding) */
 
         /* SADECE MOBİL CİHAZLAR İÇİN ÖZEL DÜZENLEME (< 640px) */
         @media (max-width: 640px) {
@@ -115,6 +115,8 @@
                 width: 48px !important; height: 48px !important;
                 min-width: 48px !important; min-height: 48px !important;
             }
+            
+            .drop-zone-content { min-height: 64px; } /* 48px Resim + 16px Boşluk (Padding) */
 
             /* Mobil havuz dış kapsayıcısını ekranın altına sabitle */
             .mobile-pool-wrapper {
@@ -490,7 +492,7 @@
                 const borderClass = isLast ? '' : 'border-b border-[#0f1115]';
 
                 const row = document.createElement('div');
-                row.className = `flex min-h-[72px] bg-[#1e222a] ${borderClass} group`;
+                row.className = `flex min-h-[64px] sm:min-h-[80px] bg-[#1e222a] ${borderClass} group`;
                 row.setAttribute('data-tier-id', tier.id);
 
                 row.innerHTML = `
@@ -675,9 +677,9 @@
                     });
                 }
 
-                // 2. DOM YERLEŞTİRME HESAPLAMASI (Kasmayı önlemek için filtrelendi - 60ms Throttle)
+                // 2. DOM YERLEŞTİRME HESAPLAMASI (Sıfır kasma için yenilendi)
                 const now = Date.now();
-                if (now - dragState.lastDomUpdate > 60) {
+                if (now - dragState.lastDomUpdate > 30) {
                     dragState.lastDomUpdate = now;
                     performHeavyDomUpdate(clientX, clientY);
                 }
@@ -688,34 +690,47 @@
         function performHeavyDomUpdate(clientX, clientY) {
             if (!dragState || !dragState.element) return;
 
-            // --- CANLI ÖN İZLEME MANTIĞI ---
+            // --- CANLI ÖN İZLEME MANTIĞI (O(1) Karmaşıklık - Yüksek Performans) ---
             const targetEl = document.elementFromPoint(clientX, clientY);
-            const dropZone = targetEl ? targetEl.closest('[data-tier-id]') : null;
+            if (!targetEl) return;
 
-            if (dropZone) {
-                let dropContent = dropZone.classList.contains('drop-zone-content') ? dropZone : dropZone.querySelector('.drop-zone-content');
-                if (!dropContent && dropZone.id === 'imagePool') dropContent = dropZone;
+            const dropZone = targetEl.closest('[data-tier-id]');
+            if (!dropZone) return;
 
-                if (dropContent) {
-                    // Performans: DOM içinden hızlı filtreleme
-                    const siblings = Array.from(dropContent.children).filter(el => el.classList.contains('draggable-wrapper') && el !== dragState.element);
-                    
-                    let nextSibling = siblings.find(sibling => {
-                        const box = sibling.getBoundingClientRect();
-                        if (clientY < box.top) return true; // Fare üst satırda
-                        if (clientY > box.bottom) return false; // Fare alt satırda
-                        return clientX < box.left + box.width / 2; // Fare bu elemanın sol yarısında
-                    });
+            let dropContent = dropZone.classList.contains('drop-zone-content') ? dropZone : dropZone.querySelector('.drop-zone-content');
+            if (!dropContent && dropZone.id === 'imagePool') dropContent = dropZone;
 
-                    // PERFORMANS MUCİZESİ #2: Hedef konum zaten aynıysa HTML'i SAKIN ellemeye çalışma! (Kasmayı yok eden kısım)
-                    const currentNextSibling = dragState.element.nextElementSibling;
-                    const currentParent = dragState.element.parentNode;
+            if (dropContent) {
+                const hoveredWrapper = targetEl.closest('.draggable-wrapper');
 
-                    if (currentParent !== dropContent || currentNextSibling !== (nextSibling || null)) {
-                        if (nextSibling) {
-                            dropContent.insertBefore(dragState.element, nextSibling);
-                        } else {
-                            dropContent.appendChild(dragState.element);
+                // 1. DURUM: Fare başka bir fotoğrafın üzerindeyse
+                if (hoveredWrapper && hoveredWrapper !== dragState.element && hoveredWrapper.parentNode === dropContent) {
+                    const box = hoveredWrapper.getBoundingClientRect();
+                    // Farenin fotoğrafın sağında mı solunda mı olduğunu anla
+                    const insertBefore = clientX < box.left + box.width / 2;
+                    const targetNextSibling = insertBefore ? hoveredWrapper : hoveredWrapper.nextElementSibling;
+
+                    if (dragState.element.nextElementSibling !== targetNextSibling || dragState.element.parentNode !== dropContent) {
+                        dropContent.insertBefore(dragState.element, targetNextSibling);
+                    }
+                } 
+                // 2. DURUM: Fare boşluğa veya katman arkaplanına geldiyse
+                else if (!hoveredWrapper) {
+                    let actualLastChild = dropContent.lastElementChild;
+                    if (actualLastChild === dragState.element) {
+                        actualLastChild = dragState.element.previousElementSibling;
+                    }
+
+                    if (!actualLastChild) {
+                        // Kutu tamamen boşsa direkt ekle
+                        if (dragState.element.parentNode !== dropContent) dropContent.appendChild(dragState.element);
+                    } else {
+                        // Kutu doluysa, farenin son elemandan daha ileride olup olmadığına bak
+                        const lastBox = actualLastChild.getBoundingClientRect();
+                        if (clientY > lastBox.bottom || (clientY >= lastBox.top && clientX > lastBox.right)) {
+                            if (dragState.element.parentNode !== dropContent || dragState.element.nextElementSibling !== null) {
+                                dropContent.appendChild(dragState.element);
+                            }
                         }
                     }
                 }
