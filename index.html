@@ -566,9 +566,10 @@
         }
         window.addEventListener('resize', adjustTierLabelSizes);
 
-        // --- SÜRÜKLE VE BIRAK MANTIĞI (ÖN İZLEMELİ) ---
+        // --- SÜRÜKLE VE BIRAK MANTIĞI (ÖN İZLEMELİ VE YÜKSEK PERFORMANSLI) ---
         let dragState = null;
         let longPressTimer = null; // Mobilde Uzun Basma Algılayıcı
+        let dragUpdatePending = false; // PERFORMANS İÇİN
 
         function startDrag(e) {
             if (e.type === 'mousedown' && e.button !== 0) return; // Sadece Sol tık sürüklemeyi başlatır
@@ -594,7 +595,8 @@
                 startX: clientX,
                 startY: clientY,
                 isDragging: false,
-                clone: null
+                clone: null,
+                lastDomUpdate: 0 // PERFORMANS: Hesaplama gecikmesi için eklendi
             };
 
             document.addEventListener('mousemove', dragMove);
@@ -626,17 +628,19 @@
 
                     // Uçan Klon (Fareyi / Parmağı takip eden görsel)
                     clone.style.position = 'fixed';
-                    clone.style.left = `${rect.left}px`;
-                    clone.style.top = `${rect.top}px`;
+                    clone.style.left = `0px`; // GPU Hızlandırması için sıfırlandı
+                    clone.style.top = `0px`;  // GPU Hızlandırması için sıfırlandı
                     clone.style.width = `${rect.width}px`;
                     clone.style.height = `${rect.height}px`;
                     clone.style.pointerEvents = 'none'; 
                     clone.style.zIndex = '9999';
                     clone.style.margin = '0';
-                    clone.style.opacity = '0.9';
+                    clone.style.opacity = '0.95';
                     clone.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)';
-                    clone.style.transform = 'scale(1.1)';
-                    clone.style.transition = 'transform 0.1s ease';
+                    
+                    // KASMAYI ÖNLEYEN KISIM: Animasyon gecikmesi (transition) kaldırıldı ve CPU yerine GPU (translate3d) kullanıldı
+                    clone.style.transition = 'none'; 
+                    clone.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0) scale(1.1)`;
                     
                     document.body.appendChild(clone);
                     dragState.clone = clone;
@@ -648,39 +652,66 @@
                     dragState.element.style.transform = 'scale(0.95)';
                     dragState.element.style.border = '2px dashed #60a5fa'; // Mavi kesik çizgi
                     dragState.element.style.borderRadius = '0.5rem';
+                    dragState.element.style.transition = 'none'; // Orijinalin de yer değiştirirken kasmasını engeller
+                    dragState.element.style.pointerEvents = 'none'; // PERFORMANS: Altındaki katmanları kolayca algılaması için ghost tıklamaları kapatılır
                     
                     document.querySelectorAll('.delete-btn').forEach(b => b.classList.add('opacity-0', 'pointer-events-none'));
                 }
             }
 
             if (dragState.isDragging) {
-                e.preventDefault(); 
-                // Klonu fareyle hareket ettir
-                dragState.clone.style.left = `${clientX - dragState.offsetX}px`;
-                dragState.clone.style.top = `${clientY - dragState.offsetY}px`;
+                if (e.cancelable) e.preventDefault(); 
+                
+                // 1. KLON HAREKETİ (GPU ile Kusursuz 60 FPS)
+                if (!dragUpdatePending) {
+                    dragUpdatePending = true;
+                    requestAnimationFrame(() => {
+                        if (dragState && dragState.clone) {
+                            const x = clientX - dragState.offsetX;
+                            const y = clientY - dragState.offsetY;
+                            dragState.clone.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.1)`;
+                        }
+                        dragUpdatePending = false;
+                    });
+                }
 
-                // --- CANLI ÖN İZLEME MANTIĞI ---
-                // Farenin altındaki hedef alanı bul (Klon pointer-events: none olduğu için engellemez)
-                const targetEl = document.elementFromPoint(clientX, clientY);
-                const dropZone = targetEl ? targetEl.closest('[data-tier-id]') : null;
+                // 2. DOM YERLEŞTİRME HESAPLAMASI (Kasmayı önlemek için filtrelendi - 60ms Throttle)
+                const now = Date.now();
+                if (now - dragState.lastDomUpdate > 60) {
+                    dragState.lastDomUpdate = now;
+                    performHeavyDomUpdate(clientX, clientY);
+                }
+            }
+        }
 
-                if (dropZone) {
-                    let dropContent = dropZone.classList.contains('drop-zone-content') ? dropZone : dropZone.querySelector('.drop-zone-content');
-                    if (!dropContent && dropZone.id === 'imagePool') dropContent = dropZone;
+        // PERFORMANS: Ağır DOM hesaplamalarını ayrıştırdık
+        function performHeavyDomUpdate(clientX, clientY) {
+            if (!dragState || !dragState.element) return;
 
-                    if (dropContent) {
-                        // Orijinal eleman hariç diğer çocukları al
-                        const siblings = [...dropContent.querySelectorAll('.draggable-wrapper')]
-                                            .filter(el => el !== dragState.element);
-                        
-                        let nextSibling = siblings.find(sibling => {
-                            const box = sibling.getBoundingClientRect();
-                            if (clientY < box.top) return true; // Fare üst satırda
-                            if (clientY > box.bottom) return false; // Fare alt satırda
-                            return clientX < box.left + box.width / 2; // Fare bu elemanın sol yarısında
-                        });
+            // --- CANLI ÖN İZLEME MANTIĞI ---
+            const targetEl = document.elementFromPoint(clientX, clientY);
+            const dropZone = targetEl ? targetEl.closest('[data-tier-id]') : null;
 
-                        // Orijinal (hayalet) elementi DOM'da anlık olarak yeni yerine taşı
+            if (dropZone) {
+                let dropContent = dropZone.classList.contains('drop-zone-content') ? dropZone : dropZone.querySelector('.drop-zone-content');
+                if (!dropContent && dropZone.id === 'imagePool') dropContent = dropZone;
+
+                if (dropContent) {
+                    // Performans: DOM içinden hızlı filtreleme
+                    const siblings = Array.from(dropContent.children).filter(el => el.classList.contains('draggable-wrapper') && el !== dragState.element);
+                    
+                    let nextSibling = siblings.find(sibling => {
+                        const box = sibling.getBoundingClientRect();
+                        if (clientY < box.top) return true; // Fare üst satırda
+                        if (clientY > box.bottom) return false; // Fare alt satırda
+                        return clientX < box.left + box.width / 2; // Fare bu elemanın sol yarısında
+                    });
+
+                    // PERFORMANS MUCİZESİ #2: Hedef konum zaten aynıysa HTML'i SAKIN ellemeye çalışma! (Kasmayı yok eden kısım)
+                    const currentNextSibling = dragState.element.nextElementSibling;
+                    const currentParent = dragState.element.parentNode;
+
+                    if (currentParent !== dropContent || currentNextSibling !== (nextSibling || null)) {
                         if (nextSibling) {
                             dropContent.insertBefore(dragState.element, nextSibling);
                         } else {
@@ -702,8 +733,6 @@
                 const clientY = e.type.includes('touch') ? e.changedTouches[0].clientY : e.clientY;
 
                 // --- STATE SENKRONİZASYONU ---
-                // Görsel canlı olarak DOM'da (ekranda) yer değiştirdiği için, bırakıldığında
-                // state verilerimizi HTML üzerindeki son duruma bakarak güncelliyoruz.
                 const newImages = [];
                 
                 // 1. Önce Tier'ları Tara
@@ -736,7 +765,12 @@
 
                 // Listeyi yeni sırasıyla güncelle
                 state.images = newImages;
-                spawnParticles(clientX, clientY);
+
+                // PARTİKÜLLERİ HER ZAMAN GÖRSELİN TAM MERKEZİNDE OLUŞTUR (Garantili Çalışır)
+                const finalRect = dragState.element.getBoundingClientRect();
+                const centerX = finalRect.left + (finalRect.width / 2);
+                const centerY = finalRect.top + (finalRect.height / 2);
+                spawnParticles(centerX, centerY);
             }
 
             // Klonu Sil ve Orijinali Eski Görünümüne Döndür
@@ -745,6 +779,8 @@
                 dragState.element.style.opacity = '1';
                 dragState.element.style.transform = '';
                 dragState.element.style.border = '';
+                dragState.element.style.transition = 'transform 0.1s'; // Animasyonu geri ver
+                dragState.element.style.pointerEvents = ''; // PERFORMANS: Tıklamaları geri aç
             }
             
             document.removeEventListener('mousemove', dragMove);
